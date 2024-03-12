@@ -1,4 +1,4 @@
-# Metro
+# Metro 6
 
 Material Design music player for Android music lovers
 
