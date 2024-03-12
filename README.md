@@ -1,4 +1,4 @@
-# Metro
+# Metro 11
 
 Material Design music player for Android music lovers
 
