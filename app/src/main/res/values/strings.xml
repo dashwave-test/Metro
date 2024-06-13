@@ -8,7 +8,7 @@
     <string name="action_add_to_blacklist">Add to Blacklist</string>
     <string name="action_add_to_favorites">Add to favorites</string>
     <string name="action_add_to_playing_queue">Add to playing queue</string>
-    <string name="action_add_to_playlist">Add to playlist</string>
+    <string name="action_add_to_playlist">Add to playlists</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_cast">Cast</string>
     <string name="action_clear_playing_queue">Clear playing queue</string>
@@ -276,7 +276,7 @@
     <string name="no_playlists">You have no playlists</string>
     <string name="no_purchase_found">No purchase found.</string>
     <string name="no_results">No results</string>
-    <string name="no_songs">You have no songs</string>
+    <string name="no_songs">You have no streams</string>
     <string name="normal">Normal</string>
     <string name="normal_lyrics">Normal lyrics</string>
     <string name="not_listed_in_media_store"><![CDATA[<b>%s</b> is not listed in the media store.]]></string>
