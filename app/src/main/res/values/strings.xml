@@ -266,7 +266,7 @@
     <string name="new_start_directory">%s is the new start directory.</string>
     <string name="next_song">Next Song</string>
     <string name="no_albums">You have no albums</string>
-    <string name="no_artists">You have no artists</string>
+    <string name="no_artists">Sorry no artists to be found :(</string>
     <string name="no_audio_ID">"Play a song first, then try again."</string>
     <string name="no_backups_found">No Backups Found</string>
     <string name="no_equalizer">No equalizer found</string>
