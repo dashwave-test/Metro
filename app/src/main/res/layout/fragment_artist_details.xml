@@ -88,6 +88,16 @@
                 app:layout_constraintTop_toBottomOf="@id/artistTitle"
                 tools:text="@tools:sample/full_names" />
 
+            <Button
+                android:id="@+id/show_artist_name_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show Artist Name"
+                app:layout_constraintTop_toBottomOf="@id/text"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+
             <include
                 android:id="@+id/fragment_artist_content"
                 layout="@layout/fragment_artist_content"

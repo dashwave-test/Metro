@@ -28,4 +28,16 @@ class ArtistDetailsFragment : AbsArtistDetailsFragment() {
     override val artistName: String?
         get() = null
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val showArtistNameButton: Button = view.findViewById(R.id.show_artist_name_button)
+        showArtistNameButton.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Artist Name")
+                .setMessage(artist.name)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+        }
+    }
+
 }
