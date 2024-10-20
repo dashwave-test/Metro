@@ -114,7 +114,9 @@ object LyricUtil {
     }
 
     private fun getLrcPath(title: String, artist: String): String {
-        return "$lrcRootPath$title - $artist.lrc"
+        val sanitizedTitle = sanitizeFilename(title)
+        val sanitizedArtist = sanitizeFilename(artist)
+        return "$lrcRootPath$sanitizedTitle - $sanitizedArtist.lrc"
     }
 
     private fun getLrcOriginalPath(filePath: String): String {
@@ -133,6 +135,10 @@ object LyricUtil {
     @Throws(Exception::class)
     private fun convertStreamToString(inputStream: InputStream): String {
         return inputStream.bufferedReader().readLines().joinToString(separator = "\n")
+    }
+
+    private fun sanitizeFilename(input: String): String {
+        return input.replace(Regex("[^a-zA-Z0-9.\\-]"), "_")
     }
 
     fun getStringFromLrc(file: File?): String {
