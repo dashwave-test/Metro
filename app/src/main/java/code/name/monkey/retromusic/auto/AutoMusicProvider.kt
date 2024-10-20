@@ -69,7 +69,7 @@ class AutoMusicProvider(
                         .title(album.title)
                         .subTitle(album.albumArtist ?: album.artistName)
                         .icon(MusicUtil.getMediaStoreAlbumCoverUri(album.id))
-                        .asPlayable()
+                        .asBrowsable() // Changed to asBrowsable to handle album correctly
                         .build()
                 )
             }
