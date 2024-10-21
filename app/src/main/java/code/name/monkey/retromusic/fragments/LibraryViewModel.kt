@@ -3,10 +3,6 @@
  *
  * Licensed under the GNU General Public License v3
  *
- * This is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- *
  * This software is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -36,6 +32,7 @@ import code.name.monkey.retromusic.util.PreferenceUtil
 import code.name.monkey.retromusic.util.logD
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -62,14 +59,23 @@ class LibraryViewModel(
         loadLibraryContent()
     }
 
-    private fun loadLibraryContent() = viewModelScope.launch(IO) {
-        fetchHomeSections()
-        fetchSuggestions()
-        fetchSongs()
-        fetchAlbums()
-        fetchArtists()
-        fetchGenres()
-        fetchPlaylists()
+    private fun loadLibraryContent() = viewModelScope.launch {
+        val songsDeferred = async(IO) { fetchSongs() }
+        val albumsDeferred = async(IO) { fetchAlbums() }
+        val artistsDeferred = async(IO) { fetchArtists() }
+        val playlistsDeferred = async(IO) { fetchPlaylists() }
+        val genresDeferred = async(IO) { fetchGenres() }
+        val homeSectionsDeferred = async(IO) { fetchHomeSections() }
+        val suggestionsDeferred = async(IO) { fetchSuggestions() }
+
+        // Await on them if you need to perform any action post loading
+        songsDeferred.await()
+        albumsDeferred.await()
+        artistsDeferred.await()
+        playlistsDeferred.await()
+        genresDeferred.await()
+        homeSectionsDeferred.await()
+        suggestionsDeferred.await()
     }
 
     fun getSearchResult(): LiveData<List<Any>> = searchResults
