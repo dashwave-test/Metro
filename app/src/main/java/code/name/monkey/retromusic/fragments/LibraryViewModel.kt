@@ -37,6 +37,7 @@ import code.name.monkey.retromusic.util.logD
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -63,13 +64,22 @@ class LibraryViewModel(
     }
 
     private fun loadLibraryContent() = viewModelScope.launch(IO) {
-        fetchHomeSections()
-        fetchSuggestions()
-        fetchSongs()
-        fetchAlbums()
-        fetchArtists()
-        fetchGenres()
-        fetchPlaylists()
+        val homeSectionsDeferred = async { fetchHomeSections() }
+        val suggestionsDeferred = async { fetchSuggestions() }
+        val songsDeferred = async { fetchSongs() }
+        val albumsDeferred = async { fetchAlbums() }
+        val artistsDeferred = async { fetchArtists() }
+        val genresDeferred = async { fetchGenres() }
+        val playlistsDeferred = async { fetchPlaylists() }
+
+        // Wait for all async tasks to complete
+        homeSectionsDeferred.await()
+        suggestionsDeferred.await()
+        songsDeferred.await()
+        albumsDeferred.await()
+        artistsDeferred.await()
+        genresDeferred.await()
+        playlistsDeferred.await()
     }
 
     fun getSearchResult(): LiveData<List<Any>> = searchResults
