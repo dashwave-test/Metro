@@ -63,13 +63,16 @@ class LibraryViewModel(
     }
 
     private fun loadLibraryContent() = viewModelScope.launch(IO) {
-        fetchHomeSections()
-        fetchSuggestions()
-        fetchSongs()
-        fetchAlbums()
-        fetchArtists()
-        fetchGenres()
-        fetchPlaylists()
+        val tasks = listOf(
+            launch { fetchHomeSections() },
+            launch { fetchSuggestions() },
+            launch { fetchSongs() },
+            launch { fetchAlbums() },
+            launch { fetchArtists() },
+            launch { fetchGenres() },
+            launch { fetchPlaylists() }
+        )
+        tasks.forEach { it.join() }
     }
 
     fun getSearchResult(): LiveData<List<Any>> = searchResults
