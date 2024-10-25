@@ -1,17 +1,3 @@
-/*
- * Copyright (c) 2020 Hemanth Savarla.
- *
- * Licensed under the GNU General Public License v3
- *
- * This is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- */
 package code.name.monkey.retromusic.fragments
 
 import android.animation.ValueAnimator
@@ -36,6 +22,7 @@ import code.name.monkey.retromusic.util.PreferenceUtil
 import code.name.monkey.retromusic.util.logD
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -63,13 +50,21 @@ class LibraryViewModel(
     }
 
     private fun loadLibraryContent() = viewModelScope.launch(IO) {
-        fetchHomeSections()
-        fetchSuggestions()
-        fetchSongs()
-        fetchAlbums()
-        fetchArtists()
-        fetchGenres()
-        fetchPlaylists()
+        val homeJob = async { fetchHomeSections() }
+        val suggestionsJob = async { fetchSuggestions() }
+        val songsJob = async { fetchSongs() }
+        val albumsJob = async { fetchAlbums() }
+        val artistsJob = async { fetchArtists() }
+        val playlistsJob = async { fetchPlaylists() }
+        val genresJob = async { fetchGenres() }
+
+        homeJob.await()
+        suggestionsJob.await()
+        songsJob.await()
+        albumsJob.await()
+        artistsJob.await()
+        playlistsJob.await()
+        genresJob.await()
     }
 
     fun getSearchResult(): LiveData<List<Any>> = searchResults
