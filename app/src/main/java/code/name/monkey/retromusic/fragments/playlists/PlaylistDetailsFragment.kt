@@ -8,6 +8,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -35,6 +36,8 @@ import com.google.android.material.transition.MaterialContainerTransform
 import com.google.android.material.transition.MaterialSharedAxis
 import com.h6ah4i.android.widget.advrecyclerview.animator.DraggableItemAnimator
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
@@ -72,20 +75,31 @@ class PlaylistDetailsFragment : AbsMainActivityFragment(R.layout.fragment_playli
 
         setUpRecyclerView()
         setupButtons()
-        viewModel.getPlaylist().observe(viewLifecycleOwner) { playlistWithSongs ->
-            playlist = playlistWithSongs
-            Glide.with(this)
-                .load(PlaylistPreview(playlistWithSongs))
-                .playlistOptions()
-                .into(binding.image)
-            binding.title.text = playlist.playlistEntity.playlistName
-            binding.subtitle.text =
-                MusicUtil.getPlaylistInfoString(requireContext(), playlist.songs.toSongs())
-            binding.collapsingAppBarLayout.title = playlist.playlistEntity.playlistName
+
+        // Load data in parallel
+        lifecycleScope.launch(Dispatchers.IO) {
+            val playlistWithSongs = viewModel.getPlaylist().value
+            val songs = viewModel.getSongs().value
+
+            launch(Dispatchers.Main) {
+                playlistWithSongs?.let {
+                    playlist = it
+                    Glide.with(this@PlaylistDetailsFragment)
+                        .load(PlaylistPreview(it))
+                        .playlistOptions()
+                        .into(binding.image)
+                    binding.title.text = it.playlistEntity.playlistName
+                    binding.subtitle.text =
+                        MusicUtil.getPlaylistInfoString(requireContext(), it.songs.toSongs())
+                    binding.collapsingAppBarLayout.title = it.playlistEntity.playlistName
+                }
+
+                songs?.let {
+                    songs(it.toSongs())
+                }
+            }
         }
-        viewModel.getSongs().observe(viewLifecycleOwner) {
-            songs(it.toSongs())
-        }
+
         viewModel.playlistExists().observe(viewLifecycleOwner) {
             if (!it) {
                 findNavController().navigateUp()
