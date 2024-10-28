@@ -26,6 +26,8 @@ import code.name.monkey.retromusic.extensions.getString
 import code.name.monkey.retromusic.extensions.getStringOrNull
 import code.name.monkey.retromusic.model.PlaylistSong
 import code.name.monkey.retromusic.model.Song
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Created by hemanths on 16/08/17.
@@ -34,26 +36,24 @@ import code.name.monkey.retromusic.model.Song
 object PlaylistSongsLoader {
 
     @JvmStatic
-    fun getPlaylistSongList(context: Context, playlistId: Long): List<Song> {
-        val songs = mutableListOf<Song>()
-        val cursor =
-            makePlaylistSongCursor(
-                context,
-                playlistId
-            )
+    suspend fun getPlaylistSongList(context: Context, playlistId: Long): List<Song> {
+        return withContext(Dispatchers.IO) {
+            val songs = mutableListOf<Song>()
+            val cursor = makePlaylistSongCursor(context, playlistId)
 
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                songs.add(
-                    getPlaylistSongFromCursorImpl(
-                        cursor,
-                        playlistId
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    songs.add(
+                        getPlaylistSongFromCursorImpl(
+                            cursor,
+                            playlistId
+                        )
                     )
-                )
-            } while (cursor.moveToNext())
+                } while (cursor.moveToNext())
+            }
+            cursor?.close()
+            songs
         }
-        cursor?.close()
-        return songs
     }
 
     // TODO duplicated in [PlaylistRepository.kt]
