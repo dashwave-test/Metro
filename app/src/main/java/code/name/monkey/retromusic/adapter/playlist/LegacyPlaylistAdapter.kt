@@ -21,6 +21,10 @@ import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import code.name.monkey.retromusic.model.Playlist
 import code.name.monkey.retromusic.util.MusicUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LegacyPlaylistAdapter(
     private val activity: FragmentActivity,
@@ -49,7 +53,12 @@ class LegacyPlaylistAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val playlist: Playlist = list[position]
         holder.title?.text = playlist.name
-        holder.text?.text = MusicUtil.getPlaylistInfoString(activity, playlist.getSongs())
+        CoroutineScope(Dispatchers.Main).launch {
+            val playlistInfo = withContext(Dispatchers.IO) {
+                MusicUtil.getPlaylistInfoString(activity, playlist.getSongs())
+            }
+            holder.text?.text = playlistInfo
+        }
         holder.itemView.setOnClickListener {
             playlistClickListener.onPlaylistClick(playlist)
         }
