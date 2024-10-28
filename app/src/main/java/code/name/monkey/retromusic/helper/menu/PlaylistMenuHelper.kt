@@ -27,6 +27,7 @@ import code.name.monkey.retromusic.helper.MusicPlayerRemote
 import code.name.monkey.retromusic.repository.RealRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -50,7 +51,8 @@ object PlaylistMenuHelper : KoinComponent {
             }
             R.id.action_add_to_playlist -> {
                 CoroutineScope(Dispatchers.IO).launch {
-                    val playlists = get<RealRepository>().fetchPlaylists()
+                    val playlistsDeferred = async { get<RealRepository>().fetchPlaylists() }
+                    val playlists = playlistsDeferred.await()
                     withContext(Dispatchers.Main) {
                         AddToPlaylistDialog.create(playlists, playlistWithSongs.songs.toSongs())
                             .show(activity.supportFragmentManager, "ADD_PLAYLIST")
