@@ -24,6 +24,7 @@ import code.name.monkey.retromusic.repository.*
 import code.name.monkey.retromusic.service.MusicService
 import code.name.monkey.retromusic.util.MusicUtil
 import code.name.monkey.retromusic.util.PreferenceUtil
+import kotlinx.coroutines.*
 import java.lang.ref.WeakReference
 
 
@@ -51,69 +52,81 @@ class AutoMusicProvider(
             AutoMediaIDHelper.MEDIA_ID_ROOT -> {
                 mediaItems.addAll(getRootChildren(resources))
             }
-            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_PLAYLIST -> for (playlist in playlistsRepository.playlists()) {
-                mediaItems.add(
-                    AutoMediaItem.with(mContext)
-                        .path(AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_PLAYLIST, playlist.id)
-                        .icon(R.drawable.ic_playlist_play)
-                        .title(playlist.name)
-                        .subTitle(playlist.getInfoString(mContext))
-                        .asPlayable()
-                        .build()
-                )
+            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_PLAYLIST -> runBlocking {
+                playlistsRepository.playlists().map { playlist ->
+                    async(Dispatchers.IO) {
+                        AutoMediaItem.with(mContext)
+                            .path(AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_PLAYLIST, playlist.id)
+                            .icon(R.drawable.ic_playlist_play)
+                            .title(playlist.name)
+                            .subTitle(playlist.getInfoString(mContext))
+                            .asPlayable()
+                            .build()
+                    }
+                }.awaitAll().let { mediaItems.addAll(it) }
             }
-            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM -> for (album in albumsRepository.albums()) {
-                mediaItems.add(
-                    AutoMediaItem.with(mContext)
-                        .path(mediaId, album.id)
-                        .title(album.title)
-                        .subTitle(album.albumArtist ?: album.artistName)
-                        .icon(MusicUtil.getMediaStoreAlbumCoverUri(album.id))
-                        .asPlayable()
-                        .build()
-                )
+            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM -> runBlocking {
+                albumsRepository.albums().map { album ->
+                    async(Dispatchers.IO) {
+                        AutoMediaItem.with(mContext)
+                            .path(mediaId, album.id)
+                            .title(album.title)
+                            .subTitle(album.albumArtist ?: album.artistName)
+                            .icon(MusicUtil.getMediaStoreAlbumCoverUri(album.id))
+                            .asPlayable()
+                            .build()
+                    }
+                }.awaitAll().let { mediaItems.addAll(it) }
             }
-            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST -> for (artist in artistsRepository.artists()) {
-                mediaItems.add(
-                    AutoMediaItem.with(mContext)
-                        .asPlayable()
-                        .path(mediaId, artist.id)
-                        .title(artist.name)
-                        .build()
-                )
+            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST -> runBlocking {
+                artistsRepository.artists().map { artist ->
+                    async(Dispatchers.IO) {
+                        AutoMediaItem.with(mContext)
+                            .asPlayable()
+                            .path(mediaId, artist.id)
+                            .title(artist.name)
+                            .build()
+                    }
+                }.awaitAll().let { mediaItems.addAll(it) }
             }
-            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM_ARTIST -> for (artist in artistsRepository.albumArtists()) {
-                mediaItems.add(
-                    AutoMediaItem.with(mContext)
-                        .asPlayable()
-                        // we just pass album id here as we don't have album artist id's
-                        .path(mediaId, artist.safeGetFirstAlbum().id)
-                        .title(artist.name)
-                        .build()
-                )
+            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM_ARTIST -> runBlocking {
+                artistsRepository.albumArtists().map { artist ->
+                    async(Dispatchers.IO) {
+                        AutoMediaItem.with(mContext)
+                            .asPlayable()
+                            // we just pass album id here as we don't have album artist id's
+                            .path(mediaId, artist.safeGetFirstAlbum().id)
+                            .title(artist.name)
+                            .build()
+                    }
+                }.awaitAll().let { mediaItems.addAll(it) }
             }
-            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE -> for (genre in genresRepository.genres()) {
-                mediaItems.add(
-                    AutoMediaItem.with(mContext)
-                        .asPlayable()
-                        .path(mediaId, genre.id)
-                        .title(genre.name)
-                        .build()
-                )
+            AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE -> runBlocking {
+                genresRepository.genres().map { genre ->
+                    async(Dispatchers.IO) {
+                        AutoMediaItem.with(mContext)
+                            .asPlayable()
+                            .path(mediaId, genre.id)
+                            .title(genre.name)
+                            .build()
+                    }
+                }.awaitAll().let { mediaItems.addAll(it) }
             }
             AutoMediaIDHelper.MEDIA_ID_MUSICS_BY_QUEUE ->
                 mMusicService?.get()?.playingQueue
                     ?.let {
-                        for (song in it) {
-                            mediaItems.add(
-                                AutoMediaItem.with(mContext)
-                                    .asPlayable()
-                                    .path(mediaId, song.id)
-                                    .title(song.title)
-                                    .subTitle(song.artistName)
-                                    .icon(MusicUtil.getMediaStoreAlbumCoverUri(song.albumId))
-                                    .build()
-                            )
+                        runBlocking {
+                            it.map { song ->
+                                async(Dispatchers.IO) {
+                                    AutoMediaItem.with(mContext)
+                                        .asPlayable()
+                                        .path(mediaId, song.id)
+                                        .title(song.title)
+                                        .subTitle(song.artistName)
+                                        .icon(MusicUtil.getMediaStoreAlbumCoverUri(song.albumId))
+                                        .build()
+                                }
+                            }.awaitAll().let { mediaItems.addAll(it) }
                         }
                     }
             else -> {
