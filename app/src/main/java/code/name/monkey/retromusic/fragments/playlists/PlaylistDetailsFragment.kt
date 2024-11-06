@@ -8,6 +8,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -35,6 +36,9 @@ import com.google.android.material.transition.MaterialContainerTransform
 import com.google.android.material.transition.MaterialSharedAxis
 import com.h6ah4i.android.widget.advrecyclerview.animator.DraggableItemAnimator
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
@@ -72,20 +76,31 @@ class PlaylistDetailsFragment : AbsMainActivityFragment(R.layout.fragment_playli
 
         setUpRecyclerView()
         setupButtons()
-        viewModel.getPlaylist().observe(viewLifecycleOwner) { playlistWithSongs ->
-            playlist = playlistWithSongs
-            Glide.with(this)
-                .load(PlaylistPreview(playlistWithSongs))
-                .playlistOptions()
-                .into(binding.image)
-            binding.title.text = playlist.playlistEntity.playlistName
-            binding.subtitle.text =
-                MusicUtil.getPlaylistInfoString(requireContext(), playlist.songs.toSongs())
-            binding.collapsingAppBarLayout.title = playlist.playlistEntity.playlistName
+
+        lifecycleScope.launch {
+            val playlistDeferred = async(Dispatchers.IO) { viewModel.getPlaylist().value }
+            val songsDeferred = async(Dispatchers.IO) { viewModel.getSongs().value }
+
+            val playlistWithSongs = playlistDeferred.await()
+            val songs = songsDeferred.await()
+
+            if (playlistWithSongs != null) {
+                playlist = playlistWithSongs
+                Glide.with(this@PlaylistDetailsFragment)
+                    .load(PlaylistPreview(playlistWithSongs))
+                    .playlistOptions()
+                    .into(binding.image)
+                binding.title.text = playlist.playlistEntity.playlistName
+                binding.subtitle.text =
+                    MusicUtil.getPlaylistInfoString(requireContext(), playlist.songs.toSongs())
+                binding.collapsingAppBarLayout.title = playlist.playlistEntity.playlistName
+            }
+
+            if (songs != null) {
+                songs(songs.toSongs())
+            }
         }
-        viewModel.getSongs().observe(viewLifecycleOwner) {
-            songs(it.toSongs())
-        }
+
         viewModel.playlistExists().observe(viewLifecycleOwner) {
             if (!it) {
                 findNavController().navigateUp()
