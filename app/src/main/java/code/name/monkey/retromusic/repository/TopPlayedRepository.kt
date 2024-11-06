@@ -25,7 +25,7 @@ import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.providers.HistoryStore
 import code.name.monkey.retromusic.providers.SongPlayCountStore
 import code.name.monkey.retromusic.util.PreferenceUtil
-
+import kotlinx.coroutines.*
 
 /**
  * Created by hemanths on 16/08/17.
@@ -51,41 +51,64 @@ class RealTopPlayedRepository(
 ) : TopPlayedRepository {
 
     override fun recentlyPlayedTracks(): List<Song> {
-        return songRepository.songs(makeRecentTracksCursorAndClearUpDatabase())
+        return runBlocking {
+            async { songRepository.songs(makeRecentTracksCursorAndClearUpDatabase()) }
+        }.await()
     }
 
     override fun topTracks(): List<Song> {
-        return songRepository.songs(makeTopTracksCursorAndClearUpDatabase())
+        return runBlocking {
+            async { songRepository.songs(makeTopTracksCursorAndClearUpDatabase()) }
+        }.await()
     }
 
     override fun notRecentlyPlayedTracks(): List<Song> {
-        val allSongs = mutableListOf<Song>().apply {
-            addAll(
-                songRepository.songs(
-                    songRepository.makeSongCursor(
-                        null, null,
-                        MediaStore.Audio.Media.DATE_ADDED + " ASC"
+        return runBlocking {
+            val allSongsDeferred = async {
+                mutableListOf<Song>().apply {
+                    addAll(
+                        songRepository.songs(
+                            songRepository.makeSongCursor(
+                                null, null,
+                                MediaStore.Audio.Media.DATE_ADDED + " ASC"
+                            )
+                        )
                     )
+                }
+            }
+
+            val playedSongsDeferred = async {
+                songRepository.songs(
+                    makePlayedTracksCursorAndClearUpDatabase()
                 )
-            )
+            }
+
+            val notRecentlyPlayedSongsDeferred = async {
+                songRepository.songs(
+                    makeNotRecentTracksCursorAndClearUpDatabase()
+                )
+            }
+
+            val allSongs = allSongsDeferred.await()
+            val playedSongs = playedSongsDeferred.await()
+            val notRecentlyPlayedSongs = notRecentlyPlayedSongsDeferred.await()
+
+            allSongs.removeAll(playedSongs.toSet())
+            allSongs.addAll(notRecentlyPlayedSongs)
+            allSongs
         }
-        val playedSongs = songRepository.songs(
-            makePlayedTracksCursorAndClearUpDatabase()
-        )
-        val notRecentlyPlayedSongs = songRepository.songs(
-            makeNotRecentTracksCursorAndClearUpDatabase()
-        )
-        allSongs.removeAll(playedSongs.toSet())
-        allSongs.addAll(notRecentlyPlayedSongs)
-        return allSongs
     }
 
     override fun topAlbums(): List<Album> {
-        return albumRepository.splitIntoAlbums(topTracks(), sorted = false)
+        return runBlocking {
+            async { albumRepository.splitIntoAlbums(topTracks(), sorted = false) }
+        }.await()
     }
 
     override fun topArtists(): List<Artist> {
-        return artistRepository.splitIntoArtists(topAlbums())
+        return runBlocking {
+            async { artistRepository.splitIntoArtists(topAlbums()) }
+        }.await()
     }
 
 
