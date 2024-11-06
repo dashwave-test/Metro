@@ -28,6 +28,10 @@ import code.name.monkey.retromusic.extensions.getStringOrNull
 import code.name.monkey.retromusic.model.Playlist
 import code.name.monkey.retromusic.model.PlaylistSong
 import code.name.monkey.retromusic.model.Song
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 /**
  * Created by hemanths on 16/08/17.
@@ -83,8 +87,9 @@ class RealPlaylistRepository(
         return playlists(makePlaylistCursor(PlaylistsColumns.NAME + "=?", arrayOf(query)))
     }
 
-    override fun playlists(): List<Playlist> {
-        return playlists(makePlaylistCursor(null, null))
+    override suspend fun playlists(): List<Playlist> = coroutineScope {
+        val playlistsDeferred = async(Dispatchers.IO) { playlists(makePlaylistCursor(null, null)) }
+        playlistsDeferred.await()
     }
 
     override fun playlists(cursor: Cursor?): List<Playlist> {
